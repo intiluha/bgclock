@@ -4,16 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.bgclock.ui.screens.SettingsScreen
+import com.bgclock.ui.screens.TimerScreen
 import com.bgclock.ui.theme.BgclockTheme
 
 class MainActivity : ComponentActivity() {
@@ -22,19 +23,33 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BgclockTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "bgclock-01",
-                            style = MaterialTheme.typography.headlineMedium,
-                        )
-                    }
-                }
+                BgclockApp()
+            }
+        }
+    }
+}
+
+private object Routes {
+    const val SETTINGS = "settings"
+    const val TIMER = "timer"
+}
+
+@Composable
+private fun BgclockApp() {
+    val navController = rememberNavController()
+    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = Routes.SETTINGS,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+        ) {
+            composable(Routes.SETTINGS) {
+                SettingsScreen(onStart = { navController.navigate(Routes.TIMER) })
+            }
+            composable(Routes.TIMER) {
+                TimerScreen(onBack = { navController.popBackStack() })
             }
         }
     }
@@ -44,6 +59,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun MainPreview() {
     BgclockTheme {
-        Text(text = "bgclock-preview")
+        BgclockApp()
     }
 }
