@@ -2,6 +2,7 @@
 
 package com.bgclock.ui.screens
 
+import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -22,7 +23,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bgclock.game.GameConfig
@@ -39,6 +43,7 @@ import com.bgclock.game.Player
 import com.bgclock.game.stateAt
 import com.bgclock.ui.theme.BgclockTheme
 import kotlinx.coroutines.delay
+import java.util.Locale
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -67,6 +72,26 @@ fun TimerScreen(
     val activeIndex = state.activePlayerIndex ?: 0
     val activePlayer = config.players[activeIndex]
     val remaining = state.remainingTimes[activeIndex]
+
+    val tts = rememberTts()
+    val announced = remember(state.activePlayerIndex, state.isStarted) {
+        mutableSetOf<Long>()
+    }
+    SideEffect {
+        if (tts == null || !state.isStarted || state.isPaused) return@SideEffect
+        val seconds = remaining.inWholeSeconds
+        for (threshold in WARNING_THRESHOLDS) {
+            if (seconds <= threshold && threshold !in announced) {
+                announced.add(threshold)
+                tts.speak(
+                    warningFor(threshold),
+                    TextToSpeech.QUEUE_ADD,
+                    null,
+                    "bgclock-${state.activePlayerIndex}-$threshold",
+                )
+            }
+        }
+    }
 
     val tapInteraction = remember { MutableInteractionSource() }
 
@@ -217,6 +242,37 @@ private fun Duration.formatMmSs(): String {
     val mins = abs / 60
     val secs = abs % 60
     return "$sign$mins:${secs.toString().padStart(2, '0')}"
+}
+
+private val WARNING_THRESHOLDS = listOf(60L, 30L, 10L, 0L)
+
+private fun warningFor(threshold: Long): String = when (threshold) {
+    60L -> "one minute remaining"
+    30L -> "30 seconds remaining"
+    10L -> "10 seconds remaining"
+    0L -> "time is out, game over"
+    else -> ""
+}
+
+@Composable
+private fun rememberTts(): TextToSpeech? {
+    val context = LocalContext.current
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+    DisposableEffect(Unit) {
+        var instance: TextToSpeech? = null
+        instance = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                instance?.language = Locale.US
+                tts = instance
+            }
+        }
+        onDispose {
+            instance?.stop()
+            instance?.shutdown()
+            tts = null
+        }
+    }
+    return tts
 }
 
 @Preview(showBackground = true, name = "Timer — mid-game")

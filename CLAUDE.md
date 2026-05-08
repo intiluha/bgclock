@@ -44,3 +44,4 @@ When player's timer runs out, app says out loud "one minute remaining", "30 seco
 - allow repeating colors, but ask for confirmation in pop-up
 - sliders + free type field for duration configs
 - use settings from the last game instead of placeholder; add a button to clear settings
+- save player names used in prev games; suggest autocomplete using the most frequent ones (based on prev games)
