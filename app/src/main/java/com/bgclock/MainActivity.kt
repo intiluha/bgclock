@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = "bgclock",
+                            text = "bgclock-01",
                             style = MaterialTheme.typography.headlineMedium,
                         )
                     }
@@ -44,6 +44,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun MainPreview() {
     BgclockTheme {
-        Text(text = "bgclock")
+        Text(text = "bgclock-preview")
     }
 }
