@@ -8,11 +8,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.bgclock.game.GameConfig
 import com.bgclock.ui.screens.SettingsScreen
 import com.bgclock.ui.screens.TimerScreen
 import com.bgclock.ui.theme.BgclockTheme
@@ -37,6 +42,8 @@ private object Routes {
 @Composable
 private fun BgclockApp() {
     val navController = rememberNavController()
+    var gameConfig by remember { mutableStateOf<GameConfig?>(null) }
+
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         NavHost(
             navController = navController,
@@ -46,10 +53,18 @@ private fun BgclockApp() {
                 .padding(innerPadding),
         ) {
             composable(Routes.SETTINGS) {
-                SettingsScreen(onStart = { navController.navigate(Routes.TIMER) })
+                SettingsScreen(
+                    onStart = { config ->
+                        gameConfig = config
+                        navController.navigate(Routes.TIMER)
+                    },
+                )
             }
             composable(Routes.TIMER) {
-                TimerScreen(onBack = { navController.popBackStack() })
+                TimerScreen(
+                    config = gameConfig,
+                    onBack = { navController.popBackStack() },
+                )
             }
         }
     }

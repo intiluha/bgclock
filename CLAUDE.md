@@ -37,5 +37,10 @@ When player's timer runs out, app says out loud "one minute remaining", "30 seco
 ## Backlog
 
 - allow reordering players on settings screen (dragging)
+- System back during game does revert (not sure it's a good idea yet)
 - migrate off Android Studio's bundled SDK. `local.properties` currently has `sdk.dir=~/.local/share/android-studio/sdk`, which dies if Studio is uninstalled. Replace with either (a) AUR packages `android-sdk-cmdline-tools-latest` + `android-sdk-platform-tools` + `android-sdk-build-tools` + `android-platform` (installs to `/opt/android-sdk`), or (b) a manual cmdline-tools install under `~/Android/sdk` driven by `sdkmanager`. Then update `sdk.dir` (or set `ANDROID_HOME`) accordingly. `just check` should keep working unchanged.
 - drop `@file:OptIn(kotlin.time.ExperimentalTime::class)` from `GameEvent.kt`, `GameState.kt`, and `GameStateTest.kt` once `kotlin.time.Instant` graduates to stable (expected in a near-future Kotlin release, ~2.3/2.4). No code change beyond removing the three annotation lines.
+- Process death loses the in-flight config because it lives in BgclockApp's remember.
+- allow repeating colors, but ask for confirmation in pop-up
+- sliders + free type field for duration configs
+- use settings from the last game instead of placeholder; add a button to clear settings
