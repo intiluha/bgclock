@@ -38,7 +38,6 @@ When player's timer runs out, app says out loud "one minute remaining", "30 seco
 
 ### visible
 
-<!-- - System back during game does revert (not sure it's a good idea yet) -->
 <!-- - use settings from the last game instead of placeholder; add a button to clear settings -->
 <!-- - save player names used in prev games; suggest autocomplete using the most frequent ones (based on prev games) -->
 

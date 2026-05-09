@@ -3,6 +3,7 @@
 package com.bgclock.ui.screens
 
 import android.speech.tts.TextToSpeech
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -57,12 +59,13 @@ fun TimerScreen(
     config: GameConfig,
     events: List<GameEvent>,
     onAppendEvent: (GameEvent) -> Unit,
-    onBack: () -> Unit,
+    onNewGame: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var nowTick by remember { mutableStateOf(Clock.System.now()) }
     var debugMode by remember { mutableStateOf(false) }
     var ttsMuted by rememberSaveable { mutableStateOf(false) }
+    var showNewGameConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -106,6 +109,14 @@ fun TimerScreen(
         onAppendEvent(makeEvent(now))
     }
 
+    fun tryStartNewGame() {
+        if (state.isStarted) showNewGameConfirm = true else onNewGame()
+    }
+
+    BackHandler(enabled = state.isStarted) {
+        appendNow { GameEvent.Reverted(it) }
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -120,13 +131,13 @@ fun TimerScreen(
             ),
     ) {
         TextButton(
-            onClick = onBack,
+            onClick = ::tryStartNewGame,
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .padding(8.dp),
             colors = ButtonDefaults.textButtonColors(contentColor = Color.White),
         ) {
-            Text("← Back")
+            Text("New game")
         }
 
         Row(
@@ -198,11 +209,29 @@ fun TimerScreen(
         if (debugMode) {
             DebugOverlay(config = config, events = events, onClose = { debugMode = false })
         }
+
+        if (showNewGameConfirm) {
+            AlertDialog(
+                onDismissRequest = { showNewGameConfirm = false },
+                title = { Text("Start a new game?") },
+                text = { Text("The current timeline will be lost.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showNewGameConfirm = false
+                        onNewGame()
+                    }) { Text("New game") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showNewGameConfirm = false }) { Text("Cancel") }
+                },
+            )
+        }
     }
 }
 
 @Composable
 private fun DebugOverlay(config: GameConfig, events: List<GameEvent>, onClose: () -> Unit) {
+    BackHandler { onClose() }
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color.Black.copy(alpha = 0.92f),
@@ -307,7 +336,7 @@ private fun TimerPreviewMidGame() {
                 GameEvent.TurnPassed(now - 90.seconds),
             ),
             onAppendEvent = {},
-            onBack = {},
+            onNewGame = {},
         )
     }
 }
@@ -331,7 +360,7 @@ private fun TimerPreviewPaused() {
                 GameEvent.Paused(now - 10.seconds),
             ),
             onAppendEvent = {},
-            onBack = {},
+            onNewGame = {},
         )
     }
 }
@@ -351,7 +380,7 @@ private fun TimerPreviewNotStarted() {
             ),
             events = emptyList(),
             onAppendEvent = {},
-            onBack = {},
+            onNewGame = {},
         )
     }
 }

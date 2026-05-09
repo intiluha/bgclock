@@ -76,7 +76,7 @@ private fun BgclockApp() {
                         config = config,
                         events = events,
                         onAppendEvent = { events.add(it) },
-                        onBack = { navController.popBackStack() },
+                        onNewGame = { navController.popBackStack() },
                     )
                 }
             }
