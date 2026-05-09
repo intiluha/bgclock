@@ -29,6 +29,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +62,7 @@ fun TimerScreen(
 ) {
     var nowTick by remember { mutableStateOf(Clock.System.now()) }
     var debugMode by remember { mutableStateOf(false) }
+    var ttsMuted by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -84,12 +86,14 @@ fun TimerScreen(
         for (threshold in WARNING_THRESHOLDS) {
             if (seconds <= threshold && threshold !in announced) {
                 announced.add(threshold)
-                tts.speak(
-                    warningFor(threshold),
-                    TextToSpeech.QUEUE_ADD,
-                    null,
-                    "bgclock-${state.activePlayerIndex}-$threshold",
-                )
+                if (!ttsMuted) {
+                    tts.speak(
+                        warningFor(threshold),
+                        TextToSpeech.QUEUE_ADD,
+                        null,
+                        "bgclock-${state.activePlayerIndex}-$threshold",
+                    )
+                }
             }
         }
     }
@@ -131,6 +135,12 @@ fun TimerScreen(
                 .padding(8.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
+            TextButton(
+                onClick = { ttsMuted = !ttsMuted },
+                colors = ButtonDefaults.textButtonColors(contentColor = Color.White),
+            ) {
+                Text(if (ttsMuted) "🔇" else "🔊")
+            }
             TextButton(
                 onClick = {
                     appendNow { if (state.isPaused) GameEvent.Resumed(it) else GameEvent.Paused(it) }
