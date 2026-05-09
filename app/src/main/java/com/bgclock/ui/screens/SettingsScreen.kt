@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +29,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -79,6 +81,8 @@ fun SettingsScreen(
     val spacingPx = with(LocalDensity.current) { 16.dp.toPx() }
     val haptic = LocalHapticFeedback.current
 
+    var pendingColorChange by remember { mutableStateOf<Pair<Int, Color>?>(null) }
+
     val canStart = (0 until playerCount).all { names[it].trim().isNotEmpty() }
 
     Column(
@@ -113,7 +117,14 @@ fun SettingsScreen(
                 name = names[i],
                 onNameChange = { names[i] = it },
                 selectedColor = colors[i],
-                onColorChange = { colors[i] = it },
+                onColorChange = { color ->
+                    val duplicate = (0 until playerCount).any { j -> j != i && colors[j] == color }
+                    if (duplicate) {
+                        pendingColorChange = i to color
+                    } else {
+                        colors[i] = color
+                    }
+                },
                 modifier = Modifier
                     .zIndex(if (isDragging) 1f else 0f)
                     .offset { IntOffset(0, if (isDragging) dragOffsetY.roundToInt() else 0) }
@@ -184,6 +195,23 @@ fun SettingsScreen(
         ) {
             Text("Start")
         }
+    }
+
+    pendingColorChange?.let { (idx, color) ->
+        AlertDialog(
+            onDismissRequest = { pendingColorChange = null },
+            title = { Text("Use the same color twice?") },
+            text = { Text("Another player already uses this color. Continue anyway?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    colors[idx] = color
+                    pendingColorChange = null
+                }) { Text("Use anyway") }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingColorChange = null }) { Text("Cancel") }
+            },
+        )
     }
 }
 

@@ -39,7 +39,6 @@ When player's timer runs out, app says out loud "one minute remaining", "30 seco
 ### visible
 
 - TTS mute toggle (Settings checkbox or top-bar button on Timer); useful when phone is on speaker in a quiet room
-- allow repeating colors, but ask for confirmation in pop-up
 - debug overlay shows raw `event.toString()` per row; replace with the CLAUDE.md format (`Turn passed (to Bob); Alice 28m53s; Bob 31m`) by replaying `stateAt(events.subList(0, i+1), events[i].at)` for each row
 <!-- - System back during game does revert (not sure it's a good idea yet) -->
 <!-- - use settings from the last game instead of placeholder; add a button to clear settings -->
