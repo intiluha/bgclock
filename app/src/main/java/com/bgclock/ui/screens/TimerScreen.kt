@@ -40,6 +40,7 @@ import com.bgclock.game.GameConfig
 import com.bgclock.game.GameEvent
 import com.bgclock.game.Palette
 import com.bgclock.game.Player
+import com.bgclock.game.formatTimelineRow
 import com.bgclock.game.stateAt
 import com.bgclock.ui.theme.BgclockTheme
 import kotlinx.coroutines.delay
@@ -185,13 +186,13 @@ fun TimerScreen(
         )
 
         if (debugMode) {
-            DebugOverlay(events = events, onClose = { debugMode = false })
+            DebugOverlay(config = config, events = events, onClose = { debugMode = false })
         }
     }
 }
 
 @Composable
-private fun DebugOverlay(events: List<GameEvent>, onClose: () -> Unit) {
+private fun DebugOverlay(config: GameConfig, events: List<GameEvent>, onClose: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color.Black.copy(alpha = 0.92f),
@@ -222,9 +223,9 @@ private fun DebugOverlay(events: List<GameEvent>, onClose: () -> Unit) {
                 if (events.isEmpty()) {
                     Text("(no events yet)", color = Color.White)
                 } else {
-                    for ((i, event) in events.withIndex()) {
+                    for (i in events.indices) {
                         Text(
-                            "$i: $event",
+                            formatTimelineRow(config, events, i),
                             color = Color.White,
                             style = MaterialTheme.typography.bodySmall,
                         )
