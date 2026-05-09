@@ -43,5 +43,4 @@ When player's timer runs out, app says out loud "one minute remaining", "30 seco
 
 ### hygiene
 
-- migrate off Android Studio's bundled SDK. `local.properties` currently has `sdk.dir=~/.local/share/android-studio/sdk`, which dies if Studio is uninstalled. Replace with either (a) AUR packages `android-sdk-cmdline-tools-latest` + `android-sdk-platform-tools` + `android-sdk-build-tools` + `android-platform` (installs to `/opt/android-sdk`), or (b) a manual cmdline-tools install under `~/Android/sdk` driven by `sdkmanager`. Then update `sdk.dir` (or set `ANDROID_HOME`) accordingly. `just check` should keep working unchanged.
 - drop `@file:OptIn(kotlin.time.ExperimentalTime::class)` from `GameEvent.kt`, `GameState.kt`, and `GameStateTest.kt` once `kotlin.time.Instant` graduates to stable (expected in a near-future Kotlin release, ~2.3/2.4). No code change beyond removing the three annotation lines.

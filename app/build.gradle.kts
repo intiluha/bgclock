@@ -8,6 +8,7 @@ plugins {
 android {
     namespace = "com.bgclock"
     compileSdk = 35
+    buildToolsVersion = "37.0.0"
 
     defaultConfig {
         applicationId = "com.bgclock"
