@@ -36,12 +36,21 @@ When player's timer runs out, app says out loud "one minute remaining", "30 seco
 
 ## Backlog
 
+### visible
+
+- Process death loses the in-flight config because it lives in BgclockApp's remember.
+- persistence on process death applies to events list too, not just gameConfig (item above) — both live in BgclockApp's remember and need DataStore/rememberSaveable
+- sliders + free type field for duration configs
+- TTS mute toggle (Settings checkbox or top-bar button on Timer); useful when phone is on speaker in a quiet room
 - allow reordering players on settings screen (dragging)
-- System back during game does revert (not sure it's a good idea yet)
+- allow repeating colors, but ask for confirmation in pop-up
+- debug overlay shows raw `event.toString()` per row; replace with the CLAUDE.md format (`Turn passed (to Bob); Alice 28m53s; Bob 31m`) by replaying `stateAt(events.subList(0, i+1), events[i].at)` for each row
+<!-- - System back during game does revert (not sure it's a good idea yet) -->
+<!-- - use settings from the last game instead of placeholder; add a button to clear settings -->
+<!-- - save player names used in prev games; suggest autocomplete using the most frequent ones (based on prev games) -->
+
+### hygiene
+
 - migrate off Android Studio's bundled SDK. `local.properties` currently has `sdk.dir=~/.local/share/android-studio/sdk`, which dies if Studio is uninstalled. Replace with either (a) AUR packages `android-sdk-cmdline-tools-latest` + `android-sdk-platform-tools` + `android-sdk-build-tools` + `android-platform` (installs to `/opt/android-sdk`), or (b) a manual cmdline-tools install under `~/Android/sdk` driven by `sdkmanager`. Then update `sdk.dir` (or set `ANDROID_HOME`) accordingly. `just check` should keep working unchanged.
 - drop `@file:OptIn(kotlin.time.ExperimentalTime::class)` from `GameEvent.kt`, `GameState.kt`, and `GameStateTest.kt` once `kotlin.time.Instant` graduates to stable (expected in a near-future Kotlin release, ~2.3/2.4). No code change beyond removing the three annotation lines.
-- Process death loses the in-flight config because it lives in BgclockApp's remember.
-- allow repeating colors, but ask for confirmation in pop-up
-- sliders + free type field for duration configs
-- use settings from the last game instead of placeholder; add a button to clear settings
-- save player names used in prev games; suggest autocomplete using the most frequent ones (based on prev games)
+- drop AGP 9→10 deprecation flags from `gradle.properties` (`android.newDsl=false`, `android.builtInKotlin=false`, `android.r8.*=false`, etc.) once we migrate `kotlinOptions { jvmTarget = "17" }` to the new `kotlin { compilerOptions { ... } }` DSL. The flags currently pin AGP-8 behavior; AGP 10 will remove them entirely.

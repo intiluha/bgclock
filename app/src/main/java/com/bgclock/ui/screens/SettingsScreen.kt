@@ -145,40 +145,56 @@ private fun PlayerCard(
     onColorChange: (Color) -> Unit,
 ) {
     OutlinedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
+        Row(
             modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Player ${index + 1}", style = MaterialTheme.typography.labelLarge)
             OutlinedTextField(
                 value = name,
                 onValueChange = onNameChange,
                 placeholder = { Text("Player ${index + 1}") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.weight(1f),
             )
-            ColorSwatchRow(selectedColor = selectedColor, onColorChange = onColorChange)
+            ColorSwatchGrid(
+                selectedColor = selectedColor,
+                onColorChange = onColorChange,
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
 
 @Composable
-private fun ColorSwatchRow(selectedColor: Color, onColorChange: (Color) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        for (color in Palette.all) {
-            val isSelected = color == selectedColor
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(color)
-                    .border(
-                        width = if (isSelected) 3.dp else 0.dp,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        shape = CircleShape,
+private fun ColorSwatchGrid(
+    selectedColor: Color,
+    onColorChange: (Color) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val perRow = (Palette.all.size + 1) / 2
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        for (rowColors in Palette.all.chunked(perRow)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                for (color in rowColors) {
+                    val isSelected = color == selectedColor
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                            .border(
+                                width = if (isSelected) 3.dp else 0.dp,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                shape = CircleShape,
+                            )
+                            .clickable { onColorChange(color) },
                     )
-                    .clickable { onColorChange(color) },
-            )
+                }
+            }
         }
     }
 }
