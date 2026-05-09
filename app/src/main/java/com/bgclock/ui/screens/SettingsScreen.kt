@@ -1,8 +1,10 @@
 package com.bgclock.ui.screens
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +12,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,6 +30,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,11 +39,21 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import kotlin.math.roundToInt
 import com.bgclock.game.GameConfig
 import com.bgclock.game.Palette
 import com.bgclock.game.Player
@@ -57,6 +72,12 @@ fun SettingsScreen(
     val colors = remember { Palette.all.toMutableStateList() }
     var initialMinutes by remember { mutableIntStateOf(30) }
     var incrementSeconds by remember { mutableIntStateOf(30) }
+
+    var draggingIndex by remember { mutableStateOf<Int?>(null) }
+    var dragOffsetY by remember { mutableFloatStateOf(0f) }
+    var cardHeightPx by remember { mutableFloatStateOf(0f) }
+    val spacingPx = with(LocalDensity.current) { 16.dp.toPx() }
+    val haptic = LocalHapticFeedback.current
 
     val canStart = (0 until playerCount).all { names[it].trim().isNotEmpty() }
 
@@ -78,12 +99,62 @@ fun SettingsScreen(
         )
 
         for (i in 0 until playerCount) {
+            val isDragging = draggingIndex == i
+            val scale by animateFloatAsState(
+                targetValue = if (isDragging) 1.04f else 1f,
+                label = "playerCardScale",
+            )
+            val elevation by animateFloatAsState(
+                targetValue = if (isDragging) 8f else 0f,
+                label = "playerCardElevation",
+            )
             PlayerCard(
                 index = i,
                 name = names[i],
                 onNameChange = { names[i] = it },
                 selectedColor = colors[i],
                 onColorChange = { colors[i] = it },
+                modifier = Modifier
+                    .zIndex(if (isDragging) 1f else 0f)
+                    .offset { IntOffset(0, if (isDragging) dragOffsetY.roundToInt() else 0) }
+                    .scale(scale)
+                    .shadow(elevation.dp, MaterialTheme.shapes.medium)
+                    .onSizeChanged { cardHeightPx = it.height.toFloat() },
+                dragHandleModifier = Modifier.pointerInput(Unit) {
+                    detectDragGesturesAfterLongPress(
+                        onDragStart = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            draggingIndex = i
+                            dragOffsetY = 0f
+                        },
+                        onDragEnd = {
+                            draggingIndex = null
+                            dragOffsetY = 0f
+                        },
+                        onDragCancel = {
+                            draggingIndex = null
+                            dragOffsetY = 0f
+                        },
+                        onDrag = { change, drag ->
+                            change.consume()
+                            dragOffsetY += drag.y
+                            val di = draggingIndex ?: return@detectDragGesturesAfterLongPress
+                            val gap = cardHeightPx + spacingPx
+                            if (gap <= 0f) return@detectDragGesturesAfterLongPress
+                            if (dragOffsetY > gap / 2 && di < playerCount - 1) {
+                                names.swap(di, di + 1)
+                                colors.swap(di, di + 1)
+                                draggingIndex = di + 1
+                                dragOffsetY -= gap
+                            } else if (dragOffsetY < -gap / 2 && di > 0) {
+                                names.swap(di, di - 1)
+                                colors.swap(di, di - 1)
+                                draggingIndex = di - 1
+                                dragOffsetY += gap
+                            }
+                        },
+                    )
+                },
             )
         }
 
@@ -195,13 +266,23 @@ private fun PlayerCard(
     onNameChange: (String) -> Unit,
     selectedColor: Color,
     onColorChange: (Color) -> Unit,
+    modifier: Modifier = Modifier,
+    dragHandleModifier: Modifier = Modifier,
 ) {
-    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+    OutlinedCard(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            Box(
+                modifier = dragHandleModifier
+                    .width(20.dp)
+                    .height(48.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("⋮⋮", style = MaterialTheme.typography.titleMedium)
+            }
             OutlinedTextField(
                 value = name,
                 onValueChange = onNameChange,
@@ -216,6 +297,12 @@ private fun PlayerCard(
             )
         }
     }
+}
+
+private fun <T> MutableList<T>.swap(a: Int, b: Int) {
+    val tmp = this[a]
+    this[a] = this[b]
+    this[b] = tmp
 }
 
 @Composable
