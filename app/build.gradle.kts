@@ -1,5 +1,22 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+val keystoreFile = rootProject.file("release.p12")
+val signingTaskNames = setOf("assembleRelease", "installRelease", "bundleRelease")
+val needsSigning = gradle.startParameter.taskNames.any {
+    it.substringAfterLast(":") in signingTaskNames
+}
+
+fun fetchKeystorePassword(): String {
+    val proc = ProcessBuilder("pass", "Dev/bgclock").start()
+    val firstLine = proc.inputStream.bufferedReader().useLines { it.firstOrNull() }?.trim().orEmpty()
+    val exit = proc.waitFor()
+    if (exit != 0 || firstLine.isEmpty()) {
+        val err = proc.errorStream.bufferedReader().readText().trim()
+        error("pass Dev/bgclock failed (exit=$exit): $err")
+    }
+    return firstLine
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -18,8 +35,23 @@ android {
         versionName = "0.1.0"
     }
 
+    signingConfigs {
+        create("release") {
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                keyAlias = "bgclock"
+                if (needsSigning) {
+                    val pw = fetchKeystorePassword()
+                    storePassword = pw
+                    keyPassword = pw
+                }
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

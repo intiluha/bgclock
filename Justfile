@@ -38,6 +38,15 @@ install:
 run: install
     adb shell am start -n com.bgclock/.MainActivity
 
+# Build the signed release APK. Keystore at ./release.p12 (committed); password fetched from `pass Dev/bgclock`.
+release:
+    ./gradlew :app:assembleRelease
+    @echo "APK at app/build/outputs/apk/release/app-release.apk"
+
+# Build + install the release APK on the connected device
+release-install: release
+    adb install -r app/build/outputs/apk/release/app-release.apk
+
 # Delete all build outputs
 clean:
     ./gradlew clean
