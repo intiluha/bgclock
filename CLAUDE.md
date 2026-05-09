@@ -38,8 +38,6 @@ When player's timer runs out, app says out loud "one minute remaining", "30 seco
 
 ### visible
 
-- Process death loses the in-flight config because it lives in BgclockApp's remember.
-- persistence on process death applies to events list too, not just gameConfig (item above) — both live in BgclockApp's remember and need DataStore/rememberSaveable
 - sliders + free type field for duration configs
 - TTS mute toggle (Settings checkbox or top-bar button on Timer); useful when phone is on speaker in a quiet room
 - allow reordering players on settings screen (dragging)
