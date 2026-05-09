@@ -12,25 +12,31 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bgclock.game.GameConfig
@@ -81,20 +87,20 @@ fun SettingsScreen(
             )
         }
 
-        StepperRow(
-            label = "Time per player: $initialMinutes min",
-            decEnabled = initialMinutes > 1,
-            incEnabled = initialMinutes < 240,
-            onDec = { initialMinutes-- },
-            onInc = { initialMinutes++ },
+        DurationRow(
+            label = "Time per player",
+            value = initialMinutes,
+            onValueChange = { initialMinutes = it },
+            range = 1..240,
+            unit = "min",
         )
 
-        StepperRow(
-            label = "Turn increment: ${incrementSeconds}s",
-            decEnabled = incrementSeconds > 0,
-            incEnabled = incrementSeconds < 300,
-            onDec = { incrementSeconds-- },
-            onInc = { incrementSeconds++ },
+        DurationRow(
+            label = "Turn increment",
+            value = incrementSeconds,
+            onValueChange = { incrementSeconds = it },
+            range = 0..300,
+            unit = "s",
         )
 
         Button(
@@ -133,6 +139,52 @@ private fun StepperRow(
 private fun RowScope.StepperButton(text: String, enabled: Boolean, onClick: () -> Unit) {
     FilledIconButton(enabled = enabled, onClick = onClick) {
         Text(text, style = MaterialTheme.typography.titleLarge)
+    }
+}
+
+@Composable
+private fun DurationRow(
+    label: String,
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    range: IntRange,
+    unit: String,
+) {
+    var text by remember(value) { mutableStateOf(value.toString()) }
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+            OutlinedTextField(
+                value = text,
+                onValueChange = { input ->
+                    text = input
+                    val parsed = input.toIntOrNull()
+                    if (parsed != null && parsed in range) {
+                        onValueChange(parsed)
+                    }
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                suffix = { Text(unit) },
+                modifier = Modifier
+                    .width(112.dp)
+                    .onFocusChanged { focusState ->
+                        if (!focusState.isFocused) text = value.toString()
+                    },
+            )
+        }
+        Slider(
+            value = value.toFloat(),
+            onValueChange = { onValueChange(it.toInt().coerceIn(range)) },
+            valueRange = range.first.toFloat()..range.last.toFloat(),
+        )
     }
 }
 

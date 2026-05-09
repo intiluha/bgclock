@@ -38,7 +38,6 @@ When player's timer runs out, app says out loud "one minute remaining", "30 seco
 
 ### visible
 
-- sliders + free type field for duration configs
 - TTS mute toggle (Settings checkbox or top-bar button on Timer); useful when phone is on speaker in a quiet room
 - allow reordering players on settings screen (dragging)
 - allow repeating colors, but ask for confirmation in pop-up
