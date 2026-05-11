@@ -36,7 +36,7 @@ install:
 
 # Install, then launch the app on the connected device
 run: install
-    adb shell am start -n com.bgclock/.MainActivity
+    adb shell am start -n com.bgclock.debug/com.bgclock.MainActivity
 
 # Build the signed release APK. Keystore at ./release.p12 (committed); password fetched from `pass Dev/bgclock`.
 release:

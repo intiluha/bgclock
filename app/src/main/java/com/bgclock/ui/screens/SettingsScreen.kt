@@ -353,10 +353,12 @@ private fun ColorSwatchGrid(
                             .size(32.dp)
                             .clip(CircleShape)
                             .background(color)
-                            .border(
-                                width = if (isSelected) 3.dp else 0.dp,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                shape = CircleShape,
+                            .then(
+                                if (isSelected) {
+                                    Modifier.border(3.dp, MaterialTheme.colorScheme.onBackground, CircleShape)
+                                } else {
+                                    Modifier
+                                }
                             )
                             .clickable { onColorChange(color) },
                     )
